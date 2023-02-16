@@ -16,15 +16,16 @@ def flags_to_string(flags):
 	return ' ' + ' '.join(flags)
 
 ldflags = [
-        '-lnl-3',
-        '-lnl-route-3',
-        '-lnl-cli-3',
+	'-L/opt/libnl-227.27.0/lib',
+        '-l:libnl-3.so.200.27.0',
+        '-l:libnl-route-3.so.200.27.0',
+        '-l:libnl-cli-3.so.200.27.0',
         '-lvppinfra',
         '-lvlibmemoryclient',
         '-lvppapiclient',
 ]
 
-cflags = [ '-g', '-O0', '-Wall', '-std=gnu99', '-I/usr/local/include/libnl3' ]
+cflags = [ '-g', '-O0', '-Wall', '-std=gnu99', '-I/opt/libnl-227.27.0/include/libnl3/' ]
 
 AddOption('--vlibapi', action='store_true',
     help="Link vlibapi library", default=False)
