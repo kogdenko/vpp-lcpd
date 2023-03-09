@@ -57,6 +57,7 @@ struct lcp_itf_pair {
 
 int g_lcp_log_level = LOG_INFO;
 int g_lcp_vac_callback_msg_id;
+int g_vrf_support = 1;
 struct lcp_itf_pair g_lcp_itf_pairs[256];
 int g_lcp_itf_pair_num; 
 int g_tunsrc_set = 1;
@@ -812,6 +813,9 @@ obj_input(struct nl_object *obj, void *arg)
 	case RTM_DELLINK:
 		is_add = 0;
 	case RTM_NEWLINK:
+		if (!g_vrf_support) {
+			break;
+		}
 		link = nl_object_priv(obj);
 		link_name = rtnl_link_get_name(link);
 		if (rtnl_link_is_vrf(link)) {
@@ -854,9 +858,10 @@ print_usage(void)
 	"Usage: %s [OPTION]\n"
 	"\n"
 	"Options\n"
-	" -h  Show this help\n"
-	" -d  Daemonize\n"
-	" -l {err|warning|notice|info|debug}  Set log level, default: info\n"
+	" -h,--help  Show this help\n"
+	" -d,--daemonize  Run application in background\n"
+	" -l,log-level {err|warning|notice|info|debug}  Set log level, default: info\n"
+	"--vrf {0/1}  Set vrf synchronization support, default: 1\n"
 	"\n",
 	LCP_DAEMON_NAME
         );
@@ -867,12 +872,24 @@ int
 main(int argc, char **argv)
 {
 	struct nl_sock *sock;
-	int fd, opt, dflag;
+	int fd, opt, dflag, long_option_index;
+	const char *long_option_name;
 	fd_set rfds;
+	static struct option long_options[] = {
+		{"help", no_argument, 0, 'h' },
+		{"daemonize", no_argument, 0, 'd' },
+		{"log-level", required_argument, 0, 'l' },
+		{"vrf", required_argument, 0, 0 },
+	};
 
 	dflag = 0;
-	while ((opt = getopt(argc, argv, "hdl:")) != -1) {
+	while ((opt = getopt_long(argc, argv, "hdl:", long_options, &long_option_index)) != -1) {
 		switch (opt) {
+		case 0:
+			long_option_name = long_options[long_option_index].name;
+			if (!strcmp(long_option_name, "vrf"))
+				g_vrf_support = strtoul(optarg, NULL, 10);
+			return 0;
 		case 'd':
 			dflag = 1;
 			break;
